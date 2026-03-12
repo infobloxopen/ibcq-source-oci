@@ -16,15 +16,15 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const (
-	pluginName    = "oci-source"
-	pluginVersion = "v0.1.0"
-)
+const pluginName = "oci-source"
+
+// Version is the plugin version, injected at build time via -ldflags.
+var Version = "development"
 
 func Plugin() *plugin.Plugin {
 	return plugin.NewPlugin(
 		pluginName,
-		pluginVersion,
+		Version,
 		Configure,
 		plugin.WithKind("source"),
 	)
