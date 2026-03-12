@@ -43,4 +43,40 @@ func TestTables(t *testing.T) {
 	}
 
 	t.Logf("Found %d tables total", len(tableNames))
+
+	// Verify IsIncremental is set on the right tables
+	incrementalTables := map[string]bool{}
+	var walkIncremental func(tt schema.Tables)
+	walkIncremental = func(tt schema.Tables) {
+		for _, table := range tt {
+			if table.IsIncremental {
+				incrementalTables[table.Name] = true
+			}
+			walkIncremental(table.Relations)
+		}
+	}
+	walkIncremental(tables)
+
+	wantIncremental := []string{"oci_artifacts", "oci_tags"}
+	for _, name := range wantIncremental {
+		if !incrementalTables[name] {
+			t.Errorf("expected table %q to be incremental", name)
+		}
+	}
+
+	// Verify IncrementalKey is set on digest columns for incremental tables
+	var walkIncrementalKeys func(tt schema.Tables)
+	walkIncrementalKeys = func(tt schema.Tables) {
+		for _, table := range tt {
+			if table.IsIncremental {
+				for _, col := range table.Columns {
+					if col.Name == "digest" && !col.IncrementalKey {
+						t.Errorf("table %q: digest column should have IncrementalKey", table.Name)
+					}
+				}
+			}
+			walkIncrementalKeys(table.Relations)
+		}
+	}
+	walkIncrementalKeys(tables)
 }

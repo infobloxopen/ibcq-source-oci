@@ -17,7 +17,22 @@ func Tables() schema.Tables {
 	for _, t := range tables {
 		schema.AddCqIDs(t)
 	}
+	setIncrementalKeys(tables)
 	return tables
+}
+
+// setIncrementalKeys marks the digest column as IncrementalKey on incremental tables.
+func setIncrementalKeys(tables schema.Tables) {
+	for _, t := range tables.FlattenTables() {
+		if !t.IsIncremental {
+			continue
+		}
+		for i, c := range t.Columns {
+			if c.Name == "digest" {
+				t.Columns[i].IncrementalKey = true
+			}
+		}
+	}
 }
 
 func repositoriesTable() *schema.Table {
@@ -34,10 +49,11 @@ func repositoriesTable() *schema.Table {
 
 func artifactsTable() *schema.Table {
 	return &schema.Table{
-		Name:        "oci_artifacts",
-		Description: "OCI artifacts (image manifests and indexes)",
-		Transform:   transformers.TransformWithStruct(&Artifact{}, transformers.WithPrimaryKeys("TargetName", "Repository", "Digest")),
-		Resolver:    fetchArtifacts,
+		Name:          "oci_artifacts",
+		Description:   "OCI artifacts (image manifests and indexes)",
+		IsIncremental: true,
+		Transform:     transformers.TransformWithStruct(&Artifact{}, transformers.WithPrimaryKeys("TargetName", "Repository", "Digest")),
+		Resolver:      fetchArtifacts,
 		Relations: schema.Tables{
 			layersTable(),
 			indexChildrenTable(),
@@ -50,10 +66,11 @@ func artifactsTable() *schema.Table {
 
 func tagsTable() *schema.Table {
 	return &schema.Table{
-		Name:        "oci_tags",
-		Description: "OCI repository tags",
-		Transform:   transformers.TransformWithStruct(&Tag{}, transformers.WithPrimaryKeys("TargetName", "Repository", "Name")),
-		Resolver:    fetchTags,
+		Name:          "oci_tags",
+		Description:   "OCI repository tags",
+		IsIncremental: true,
+		Transform:     transformers.TransformWithStruct(&Tag{}, transformers.WithPrimaryKeys("TargetName", "Repository", "Name")),
+		Resolver:      fetchTags,
 	}
 }
 

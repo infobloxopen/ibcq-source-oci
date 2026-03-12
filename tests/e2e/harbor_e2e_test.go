@@ -326,3 +326,60 @@ type: application`
 		t.Logf("Artifact types: %v (may still be valid)", types)
 	}
 }
+
+// TestHarbor_Incremental verifies that pushing a new image between syncs
+// produces additional artifacts and tags on the second Harbor sync.
+func TestHarbor_Incremental(t *testing.T) {
+	skipIfNoHarbor(t)
+	ep := harborEndpointFromEnv()
+
+	project := "e2e-incr"
+	harborCreateProject(t, project)
+	harborPushImage(t, project+"/app", "v1")
+
+	spec := client.Spec{
+		Targets: []client.TargetSpec{{
+			Name:     "harbor-incr",
+			Kind:     "harbor",
+			Endpoint: ep,
+			Auth: client.AuthSpec{
+				Mode:     "basic",
+				Username: "admin",
+				Password: "Harbor12345",
+			},
+			Discovery: client.DiscoverySpec{
+				Projects: []string{project},
+			},
+		}},
+	}
+
+	// First sync
+	msgs1 := syncPlugin(t, spec, []string{"*"})
+	tc1 := tableCounts(msgs1)
+	t.Logf("Harbor incremental sync 1 counts: %+v", tc1)
+
+	if tc1["oci_tags"] == 0 {
+		t.Error("sync 1: expected tags")
+	}
+	if tc1["oci_repositories"] != 1 {
+		t.Errorf("sync 1: expected 1 repository, got %d", tc1["oci_repositories"])
+	}
+
+	// Push a second image (different repo in the same project)
+	harborPushImage(t, project+"/worker", "v1")
+
+	// Second sync
+	msgs2 := syncPlugin(t, spec, []string{"*"})
+	tc2 := tableCounts(msgs2)
+	t.Logf("Harbor incremental sync 2 counts: %+v", tc2)
+
+	if tc2["oci_repositories"] != 2 {
+		t.Errorf("sync 2: expected 2 repositories (app+worker), got %d", tc2["oci_repositories"])
+	}
+	if tc2["oci_tags"] < 2 {
+		t.Errorf("sync 2: expected at least 2 tags, got %d", tc2["oci_tags"])
+	}
+	if tc2["oci_artifacts"] <= tc1["oci_artifacts"] {
+		t.Errorf("sync 2: expected more artifacts than sync 1 (%d vs %d)", tc2["oci_artifacts"], tc1["oci_artifacts"])
+	}
+}

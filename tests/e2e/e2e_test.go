@@ -392,7 +392,7 @@ func TestMultiTarget_Sync(t *testing.T) {
 				Endpoint: registry2Endpoint,
 				Auth:     client.AuthSpec{Mode: "none"},
 				Discovery: client.DiscoverySpec{
-					Source:       "catalog",
+					Source: "catalog",
 				},
 			},
 		},
@@ -860,10 +860,10 @@ func TestMixedRepos(t *testing.T) {
 			Discovery: client.DiscoverySpec{
 				Source: "static",
 				Repositories: []string{
-					"test/alpine",      // multi-arch
-					"edge/singleplat",  // single-platform
-					"edge/labeled",     // single-platform with labels
-					"edge/test-chart",  // helm chart
+					"test/alpine",     // multi-arch
+					"edge/singleplat", // single-platform
+					"edge/labeled",    // single-platform with labels
+					"edge/test-chart", // helm chart
 				},
 			},
 		}},
@@ -1041,10 +1041,10 @@ func TestMixedExistingAndNonexistentRepos(t *testing.T) {
 			Discovery: client.DiscoverySpec{
 				Source: "static",
 				Repositories: []string{
-					"edge/singleplat",   // exists
-					"does/not/exist",    // does not exist
-					"edge/labeled",      // exists
-					"also/nonexistent",  // does not exist
+					"edge/singleplat",  // exists
+					"does/not/exist",   // does not exist
+					"edge/labeled",     // exists
+					"also/nonexistent", // does not exist
 				},
 			},
 		}},
@@ -1061,5 +1061,71 @@ func TestMixedExistingAndNonexistentRepos(t *testing.T) {
 	// But only 2 repos have artifacts
 	if tc["oci_artifacts"] < 2 {
 		t.Errorf("expected at least 2 artifacts from valid repos, got %d", tc["oci_artifacts"])
+	}
+}
+
+// TestIncremental_OCI verifies that pushing a new image between syncs
+// produces additional artifacts and tags on the second sync.
+func TestIncremental_OCI(t *testing.T) {
+	skipIfNoCluster(t)
+
+	repoName := "incr/oci-test"
+
+	// Push a first image
+	pushTestImage(t, repoName, "v1")
+
+	spec := client.Spec{
+		Targets: []client.TargetSpec{{
+			Name:     "incr-oci",
+			Kind:     "oci",
+			Endpoint: registryEndpoint,
+			Auth:     client.AuthSpec{Mode: "none"},
+			Discovery: client.DiscoverySpec{
+				Source:       "static",
+				Repositories: []string{repoName},
+			},
+		}},
+	}
+
+	// First sync
+	msgs1 := syncPlugin(t, spec, []string{"*"})
+	tc1 := tableCounts(msgs1)
+	t.Logf("Incremental OCI sync 1 counts: %+v", tc1)
+
+	if tc1["oci_tags"] != 1 {
+		t.Errorf("sync 1: expected 1 tag, got %d", tc1["oci_tags"])
+	}
+
+	// Push a second image with a new tag (different digest via busybox)
+	dst := fmt.Sprintf("localhost:30004/%s:v2", repoName)
+	cmd := exec.Command("crane", "copy", "docker.io/library/busybox:1.36", dst, "--insecure")
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("push second image: %v\n%s", err, out)
+	}
+
+	// Second sync
+	msgs2 := syncPlugin(t, spec, []string{"*"})
+	tc2 := tableCounts(msgs2)
+	t.Logf("Incremental OCI sync 2 counts: %+v", tc2)
+
+	if tc2["oci_tags"] != 2 {
+		t.Errorf("sync 2: expected 2 tags (v1+v2), got %d", tc2["oci_tags"])
+	}
+	if tc2["oci_artifacts"] <= tc1["oci_artifacts"] {
+		t.Errorf("sync 2: expected more artifacts than sync 1 (%d vs %d)", tc2["oci_artifacts"], tc1["oci_artifacts"])
+	}
+
+	// Verify both tags appear
+	tagNames := columnValues(msgs2, "oci_tags", "name")
+	wantTags := map[string]bool{"v1": false, "v2": false}
+	for _, name := range tagNames {
+		if _, ok := wantTags[name]; ok {
+			wantTags[name] = true
+		}
+	}
+	for tag, found := range wantTags {
+		if !found {
+			t.Errorf("sync 2: expected tag %q not found", tag)
+		}
 	}
 }
