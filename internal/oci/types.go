@@ -47,8 +47,8 @@ type ImageIndex struct {
 type ImageConfig struct {
 	Architecture string          `json:"architecture,omitempty"`
 	OS           string          `json:"os,omitempty"`
-	Config       ContainerConfig `json:"config,omitempty"`
-	RootFS       RootFS          `json:"rootfs,omitempty"`
+	Config       ContainerConfig `json:"config"`
+	RootFS       RootFS          `json:"rootfs"`
 	History      []HistoryEntry  `json:"history,omitempty"`
 	Created      string          `json:"created,omitempty"`
 	Author       string          `json:"author,omitempty"`

@@ -349,15 +349,15 @@ func (c *Client) handleAuthChallenge(ctx context.Context, resp *http.Response, s
 func parseWWWAuthenticate(header string) (realm, service, scope string) {
 	// Parse: Bearer realm="...",service="...",scope="..."
 	header = strings.TrimPrefix(header, "Bearer ")
-	parts := strings.Split(header, ",")
-	for _, part := range parts {
+	parts := strings.SplitSeq(header, ",")
+	for part := range parts {
 		part = strings.TrimSpace(part)
-		if strings.HasPrefix(part, "realm=") {
-			realm = strings.Trim(strings.TrimPrefix(part, "realm="), "\"")
-		} else if strings.HasPrefix(part, "service=") {
-			service = strings.Trim(strings.TrimPrefix(part, "service="), "\"")
-		} else if strings.HasPrefix(part, "scope=") {
-			scope = strings.Trim(strings.TrimPrefix(part, "scope="), "\"")
+		if after, ok := strings.CutPrefix(part, "realm="); ok {
+			realm = strings.Trim(after, "\"")
+		} else if after, ok := strings.CutPrefix(part, "service="); ok {
+			service = strings.Trim(after, "\"")
+		} else if after, ok := strings.CutPrefix(part, "scope="); ok {
+			scope = strings.Trim(after, "\"")
 		}
 	}
 	return

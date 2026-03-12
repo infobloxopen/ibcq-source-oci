@@ -18,7 +18,7 @@ type TargetSpec struct {
 	Discovery DiscoverySpec `json:"discovery"`
 
 	// Harbor-specific
-	Harbor HarborSpec `json:"harbor,omitempty"`
+	Harbor HarborSpec `json:"harbor"`
 }
 
 // AuthSpec configures registry authentication.

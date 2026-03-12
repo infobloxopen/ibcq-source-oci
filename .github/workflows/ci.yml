@@ -35,10 +35,10 @@ jobs:
 
       - name: go fix check
         run: |
-          OUTPUT=$(go fix ./... 2>&1)
-          if [ -n "$OUTPUT" ]; then
-            echo "go fix made changes:"
-            echo "$OUTPUT"
+          go fix ./...
+          if [ -n "$(git diff --name-only)" ]; then
+            echo "go fix made changes to:"
+            git diff --name-only
             exit 1
           fi
 

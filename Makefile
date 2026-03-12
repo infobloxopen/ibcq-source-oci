@@ -38,7 +38,8 @@ lint: vet ## Run all linters
 	@echo "==> Checking gofmt..."
 	@test -z "$$(gofmt -l . 2>/dev/null)" || { echo "gofmt needed on:"; gofmt -l .; exit 1; }
 	@echo "==> Checking go fix..."
-	@go fix ./... 2>&1 | tee /tmp/gofix.out && test ! -s /tmp/gofix.out || { echo "go fix made changes"; exit 1; }
+	@go fix ./... 2>/dev/null; \
+	 if [ -n "$$(git diff --name-only)" ]; then echo "go fix made changes:"; git diff --name-only; exit 1; fi
 
 vet: ## Run go vet
 	go vet ./...
