@@ -64,16 +64,28 @@ func harborCreateProject(t *testing.T, projectName string) {
 	}
 }
 
-func harborPushImage(t *testing.T, repo, tag string) {
+func harborHost(t *testing.T) string {
 	t.Helper()
-	ep := harborEndpointFromEnv()
-	// Strip scheme for crane
-	host := ep
+	host := harborEndpointFromEnv()
 	for _, prefix := range []string{"http://", "https://"} {
 		if len(host) > len(prefix) && host[:len(prefix)] == prefix {
 			host = host[len(prefix):]
 		}
 	}
+	return host
+}
+
+func harborPushImage(t *testing.T, repo, tag string) {
+	t.Helper()
+	host := harborHost(t)
+
+	// Authenticate crane to Harbor
+	login := exec.Command("crane", "auth", "login", host,
+		"-u", "admin", "-p", "Harbor12345", "--insecure")
+	if out, err := login.CombinedOutput(); err != nil {
+		t.Fatalf("crane auth login: %v\n%s", err, out)
+	}
+
 	dst := fmt.Sprintf("%s/%s:%s", host, repo, tag)
 	cmd := exec.Command("crane", "copy", "docker.io/library/alpine:3.19", dst, "--insecure")
 	out, err := cmd.CombinedOutput()
@@ -257,14 +269,17 @@ type: application`
 		t.Fatalf("helm package: %v\n%s", err, out)
 	}
 	// Push
-	host := harborEndpointFromEnv()
-	for _, prefix := range []string{"http://", "https://"} {
-		if len(host) > len(prefix) && host[:len(prefix)] == prefix {
-			host = host[len(prefix):]
-		}
+	host := harborHost(t)
+
+	// Authenticate helm to Harbor over plain HTTP
+	helmLogin := exec.Command("helm", "registry", "login", host,
+		"--username", "admin", "--password", "Harbor12345", "--insecure")
+	if out, err := helmLogin.CombinedOutput(); err != nil {
+		t.Fatalf("helm registry login: %v\n%s", err, out)
 	}
+
 	push := exec.Command("helm", "push", dir+"/e2e-chart-0.1.0.tgz",
-		fmt.Sprintf("oci://%s/e2e-helm", host), "--insecure-skip-tls-verify")
+		fmt.Sprintf("oci://%s/e2e-helm", host), "--plain-http")
 	if out, err := push.CombinedOutput(); err != nil {
 		t.Fatalf("helm push: %v\n%s", err, out)
 	}
