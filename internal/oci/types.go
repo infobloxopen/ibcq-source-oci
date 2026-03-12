@@ -45,13 +45,13 @@ type ImageIndex struct {
 
 // ImageConfig is the OCI image configuration.
 type ImageConfig struct {
-	Architecture string            `json:"architecture,omitempty"`
-	OS           string            `json:"os,omitempty"`
-	Config       ContainerConfig   `json:"config,omitempty"`
-	RootFS       RootFS            `json:"rootfs,omitempty"`
-	History      []HistoryEntry    `json:"history,omitempty"`
-	Created      string            `json:"created,omitempty"`
-	Author       string            `json:"author,omitempty"`
+	Architecture string          `json:"architecture,omitempty"`
+	OS           string          `json:"os,omitempty"`
+	Config       ContainerConfig `json:"config,omitempty"`
+	RootFS       RootFS          `json:"rootfs,omitempty"`
+	History      []HistoryEntry  `json:"history,omitempty"`
+	Created      string          `json:"created,omitempty"`
+	Author       string          `json:"author,omitempty"`
 }
 
 // ContainerConfig holds container runtime config from the image config blob.

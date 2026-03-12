@@ -38,14 +38,14 @@ type Tag struct {
 
 // Layer represents a layer descriptor within an artifact.
 type Layer struct {
-	TargetName string `json:"target_name"`
-	Registry   string `json:"registry"`
-	Repository string `json:"repository"`
-	Digest     string `json:"digest"`
+	TargetName   string `json:"target_name"`
+	Registry     string `json:"registry"`
+	Repository   string `json:"repository"`
+	Digest       string `json:"digest"`
 	ParentDigest string `json:"parent_digest"`
-	MediaType  string `json:"media_type"`
-	Size       int64  `json:"size"`
-	Index      int    `json:"index"`
+	MediaType    string `json:"media_type"`
+	Size         int64  `json:"size"`
+	Index        int    `json:"index"`
 }
 
 // IndexChild represents a child manifest within an image index.
@@ -110,12 +110,12 @@ type ImageHistory struct {
 
 // Referrer represents an artifact that references another artifact.
 type Referrer struct {
-	TargetName   string `json:"target_name"`
-	Registry     string `json:"registry"`
-	Repository   string `json:"repository"`
+	TargetName    string `json:"target_name"`
+	Registry      string `json:"registry"`
+	Repository    string `json:"repository"`
 	SubjectDigest string `json:"subject_digest"`
-	Digest       string `json:"digest"`
-	MediaType    string `json:"media_type"`
-	ArtifactType string `json:"artifact_type"`
-	Size         int64  `json:"size"`
+	Digest        string `json:"digest"`
+	MediaType     string `json:"media_type"`
+	ArtifactType  string `json:"artifact_type"`
+	Size          int64  `json:"size"`
 }

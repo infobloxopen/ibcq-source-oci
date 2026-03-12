@@ -14,28 +14,28 @@ func TestSpec_Validate(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "missing name",
-			spec: Spec{Targets: []TargetSpec{{Endpoint: "http://example.com"}}},
+			name:    "missing name",
+			spec:    Spec{Targets: []TargetSpec{{Endpoint: "http://example.com"}}},
 			wantErr: true,
 		},
 		{
-			name: "missing endpoint",
-			spec: Spec{Targets: []TargetSpec{{Name: "test"}}},
+			name:    "missing endpoint",
+			spec:    Spec{Targets: []TargetSpec{{Name: "test"}}},
 			wantErr: true,
 		},
 		{
-			name: "invalid kind",
-			spec: Spec{Targets: []TargetSpec{{Name: "test", Endpoint: "http://example.com", Kind: "invalid"}}},
+			name:    "invalid kind",
+			spec:    Spec{Targets: []TargetSpec{{Name: "test", Endpoint: "http://example.com", Kind: "invalid"}}},
 			wantErr: true,
 		},
 		{
-			name: "valid oci target",
-			spec: Spec{Targets: []TargetSpec{{Name: "test", Endpoint: "http://example.com", Kind: "oci"}}},
+			name:    "valid oci target",
+			spec:    Spec{Targets: []TargetSpec{{Name: "test", Endpoint: "http://example.com", Kind: "oci"}}},
 			wantErr: false,
 		},
 		{
-			name: "valid harbor target",
-			spec: Spec{Targets: []TargetSpec{{Name: "harbor", Endpoint: "https://harbor.example.com", Kind: "harbor"}}},
+			name:    "valid harbor target",
+			spec:    Spec{Targets: []TargetSpec{{Name: "harbor", Endpoint: "https://harbor.example.com", Kind: "harbor"}}},
 			wantErr: false,
 		},
 	}

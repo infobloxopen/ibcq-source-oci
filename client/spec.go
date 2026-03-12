@@ -38,7 +38,7 @@ type DiscoverySpec struct {
 
 // HarborSpec configures Harbor-specific options.
 type HarborSpec struct {
-	IncludeLabels     bool `json:"include_labels"`
+	IncludeLabels      bool `json:"include_labels"`
 	IncludeAccessories bool `json:"include_accessories"`
 }
 
