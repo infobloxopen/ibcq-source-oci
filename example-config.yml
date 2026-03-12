@@ -1,0 +1,55 @@
+kind: source
+spec:
+  name: oci_inventory
+  registry: local
+  path: ./bin/cq-source-oci
+  version: "v0.1.0"
+  tables:
+    - oci_repositories
+    - oci_artifacts
+    - oci_tags
+    - oci_layers
+    - oci_index_children
+    - oci_manifest_annotations
+    - oci_image_configs
+    - oci_image_labels
+    - oci_image_history
+    - oci_referrers
+  destinations: ["postgresql"]
+  spec:
+    targets:
+      - name: my_registry
+        kind: oci
+        endpoint: http://localhost:5000
+        auth:
+          mode: none
+        discovery:
+          source: catalog    # or "static" with explicit repositories list
+          # repositories:    # only needed for source: static
+          #   - myapp/frontend
+          #   - myapp/backend
+
+      # Harbor example
+      # - name: harbor_prod
+      #   kind: harbor
+      #   endpoint: https://harbor.example.com
+      #   auth:
+      #     mode: basic
+      #     username: ${HARBOR_USERNAME}
+      #     password: ${HARBOR_PASSWORD}
+      #   discovery:
+      #     source: static
+      #     repositories:
+      #       - myproject/myimage
+
+      # GHCR example
+      # - name: ghcr_org
+      #   kind: ghcr
+      #   endpoint: https://ghcr.io
+      #   auth:
+      #     mode: github_pat
+      #     token: ${GHCR_PAT}
+      #   discovery:
+      #     source: static
+      #     repositories:
+      #       - my-org/my-image
