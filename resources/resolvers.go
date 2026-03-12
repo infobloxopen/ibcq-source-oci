@@ -190,11 +190,16 @@ func fetchTags(ctx context.Context, meta schema.ClientMeta, parent *schema.Resou
 	cl := meta.(*client.Client)
 	target := cl.Target
 
-	// Discover repos first
+	// Discover repos first (same logic as fetchRepositories)
 	var repos []string
-	switch target.Discovery.Source {
-	case "catalog":
-		var err error
+	var err error
+	switch {
+	case target.Kind == "harbor" && cl.HarborClient != nil:
+		repos, err = discoverHarborRepos(ctx, cl)
+		if err != nil {
+			return fmt.Errorf("harbor discovery: %w", err)
+		}
+	case target.Discovery.Source == "catalog":
 		repos, err = cl.OCIClient.Catalog(ctx)
 		if err != nil {
 			return fmt.Errorf("catalog discovery: %w", err)
