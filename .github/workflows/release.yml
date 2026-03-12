@@ -105,6 +105,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
+          append_body: true
           body: |
             ## Container Image
 
@@ -114,3 +115,9 @@ jobs:
 
             **Digest:** `${{ needs.build-push.outputs.digest }}`
             **Platforms:** `linux/amd64`, `linux/arm64`
+
+            ### Quick Start
+
+            ```
+            docker run --rm -p 7777:7777 ${{ env.IMAGE }}:${{ github.ref_name }}
+            ```
